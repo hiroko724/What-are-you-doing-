@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What are you doing?</title>
+  <style>
+    :root {
+      --bg: #f7f2ea;
+      --surface: #f7f2ea;
+      --surface-2: #fffaf5;
+      --text: #2f2925;
+      --muted: #85786c;
+      --line: #ddd1c3;
+      --accent: #df9743;
+      --accent-strong: #c97f29;
+      --accent-soft: #f7e1c6;
+      --button-soft: #efe3d5;
+      --shadow: 0 8px 24px rgba(90, 60, 22, 0.08);
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      min-width: 180px;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 100%;
+      padding: 18px 18px 22px;
+    }
+
+    .panel {
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+
+    .title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      background: #ece4da;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-toggle {
+      border: 0;
+      cursor: pointer;
+      padding: 8px 12px;
+    }
+
+    .status.on {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .status.on .dot {
+      color: #d33b2f;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: currentColor;
+      flex: 0 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 96px;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .clock-wrap { min-width: 0; }
+
+    .clock {
+      font-size: clamp(58px, 18vw, 104px);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.06em;
+      margin: 4px 0 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .cat-wrap {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      height: clamp(58px, 18vw, 104px);
+      padding-top: 4px;
+    }
+
+    .cat-wrap img {
+      display: block;
+      width: 88px;
+      height: auto;
+      image-rendering: auto;
+    }
+
+    .next-card {
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.55);
+      border: 1px solid var(--line);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .next-title {
+      font-size: 18px;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .next-title-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .next-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .today-schedule {
+      display: grid;
+      gap: 7px;
+      margin: -6px 0 14px;
+    }
+
+    .schedule-item {
+      display: grid;
+      grid-template-columns: 52px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.34);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .schedule-time {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .schedule-title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .schedule-delete {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .schedule-delete[hidden] {
+      display: none;
+    }
+
+    .schedule-delete:hover {
+      background: #f8dfcc;
+      color: #b86429;
+    }
+
+    .schedule-delete span {
+      display: block;
+      font-size: 17px;
+      line-height: 1;
+      transform: translateY(-1px);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0 10px;
+    }
+
+    .calendar-open {
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    button, input, textarea, select { font: inherit; }
+
+    button, .button-link {
+      border: 0;
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.08s ease, opacity 0.2s ease;
+    }
+
+    .button-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .button-link[aria-disabled="true"] {
+      opacity: 0.55;
+    }
+
+    .button-icon {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 auto;
+    }
+
+    .button-icon svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+
+    button:hover, .button-link:hover { opacity: 0.95; }
+    button:active, .button-link:active { transform: translateY(1px); }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .secondary {
+      background: var(--button-soft);
+      color: var(--text);
+    }
+
+    .danger {
+      background: #f8dfcc;
+      color: #b86429;
+    }
+
+    details {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 6px;
+      list-style: none;
+      position: relative;
+      padding-left: 22px;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::before {
+      content: "▶";
+      position: absolute;
+      left: 6px;
+      top: 0;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+
+    details[open] summary::before {
+      content: "▼";
+    }
+
+    .form {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 11px;
+      background: rgba(255,255,255,0.72);
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 74px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .weekday-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .weekday-option {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.62);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .weekday-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .weekday-option:has(input:checked) {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    .meeting-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .meeting {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.6);
+    }
+
+    .meeting strong {
+      display: block;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .meeting small {
+      color: var(--muted);
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .small-btn {
+      padding: 8px 10px;
+      font-size: 12px;
+      border-radius: var(--radius);
+    }
+
+    @media (max-width: 430px) {
+      .app { padding: 20px; }
+      .hero { grid-template-columns: minmax(0, 1fr) 74px; gap: 10px; }
+      .cat-wrap { height: clamp(52px, 20vw, 82px); }
+      .cat-wrap img { width: 70px; }
+      .clock { font-size: clamp(52px, 20vw, 82px); }
+      .weekday-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    @media (max-width: 360px) {
+      .actions, .row { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: minmax(0, 1fr) 60px; }
+      .cat-wrap img { width: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel">
+      <div class="topbar">
+        <div class="title">What are you doing?</div>
+        <button class="status status-toggle" id="statusToggle" type="button" aria-pressed="false"><span class="dot"></span><span id="statusText">停止中</span></button>
+      </div>
+
+      <div class="hero">
+        <div class="clock-wrap">
+          <div class="clock" id="clock">--:--</div>
+          <div class="date" id="dateText">----</div>
+        </div>
+        <div class="cat-wrap">
+          <img src="data:image/png;base64,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" alt="猫" />
+        </div>
+      </div>
+
+      <div class="next-card">
+        <div class="label">Next Information</div>
+        <div class="next-title-row">
+          <div class="next-title" id="nextTitle">まだありません</div>
+          <button class="schedule-delete" id="nextDeleteBtn" type="button" hidden aria-label="この予定を削除">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="next-meta" id="nextMeta">開始すると、次の時報・打ち合わせアラームを表示します。</div>
+      </div>
+
+      <div class="today-schedule" id="todaySchedule"></div>
+
+      <div class="actions">
+        <a class="button-link secondary" id="morningMtgLink" href="#" target="_blank" rel="noopener noreferrer">
+          <span class="button-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M440-760v-160h80v160h-80Zm266 110-55-55 112-115 56 57-113 113Zm54 210v-80h160v80H760ZM440-40v-160h80v160h-80ZM254-652 140-763l57-56 113 113-56 54Zm508 512L651-255l54-54 114 110-57 59ZM40-440v-80h160v80H40Zm157 300-56-57 112-112 29 27 29 28-114 114Zm113-170q-70-70-70-170t70-170q70-70 170-70t170 70q70 70 70 170t-70 170q-70 70-170 70t-170-70Zm283-57q47-47 47-113t-47-113q-47-47-113-47t-113 47q-47 47-47 113t47 113q47 47 113 47t113-47ZM480-480Z"/></svg></span>
+          <span>朝MTG</span>
+        </a>
+        <a class="button-link secondary" id="nightMtgLink" href="#" target="_blank" rel="noopener noreferrer">
+          <span class="button-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M484-80q-84 0-157.5-32t-128-86.5Q144-253 112-326.5T80-484q0-146 93-257.5T410-880q-18 99 11 193.5T521-521q71 71 165.5 100T880-410q-26 144-138 237T484-80Zm0-80q88 0 163-44t118-121q-86-8-163-43.5T464-465q-61-61-97-138t-43-163q-77 43-120.5 118.5T160-484q0 135 94.5 229.5T484-160Zm-20-305Z"/></svg></span>
+          <span>夜MTG</span>
+        </a>
+      </div>
+
+      <button class="primary calendar-open button-link" id="openCalendarBtn" type="button">
+        <span class="button-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M680-80v-120H560v-80h120v-120h80v120h120v80H760v120h-80Zm-480-80q-33 0-56.5-23.5T120-240v-480q0-33 23.5-56.5T200-800h40v-80h80v80h240v-80h80v80h40q33 0 56.5 23.5T760-720v244q-20-3-40-3t-40 3v-84H200v320h280q0 20 3 40t11 40H200Zm0-480h480v-80H200v80Zm0 0v-80 80Z"/></svg></span>
+        <span>カレンダー</span>
+      </button>
+
+      <details open>
+        <summary>設定</summary>
+
+        <div class="form">
+          <div class="field">
+            <span>毎時の読み上げ文</span>
+            <textarea id="hourlyText">{hour}時です。ここまでの作業を軽く記録しましょう。</textarea>
+          </div>
+
+          <div class="field">
+            <span>朝MTG URL</span>
+            <input id="morningMtgUrl" type="url" placeholder="https://..." />
+          </div>
+
+          <div class="field">
+            <span>夜MTG URL</span>
+            <input id="nightMtgUrl" type="url" placeholder="https://..." />
+          </div>
+
+          <div class="field">
+            <span>カレンダーURL</span>
+            <input id="calendarUrl" type="text" value="calendar.html" />
+          </div>
+
+          <div class="field">
+            <span>読み上げ音声</span>
+            <select id="voiceSelect">
+              <option value="">自動</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <span>読み上げ速度</span>
+              <select id="voiceRate">
+                <option value="0.9">ゆっくり</option>
+                <option value="1">標準</option>
+                <option value="1.05">少し速め</option>
+              </select>
+            </div>
+            <div class="field">
+              <span>声の高さ</span>
+              <select id="voicePitch">
+                <option value="1">標準</option>
+                <option value="1.15">ちょい高め</option>
+                <option value="1.25">高め</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="secondary" id="testVoiceBtn" type="button">この声でテスト</button>
+        </div>
+      </details>
+
+      <details>
+        <summary>打ち合わせ予定</summary>
+
+        <div class="form">
+          <div class="row">
+            <div class="field">
+              <span>開始時刻</span>
+              <input id="meetingTime" type="time" />
+            </div>
+            <div class="field">
+              <span>何分前</span>
+              <input id="meetingBefore" type="number" value="2" min="0" max="120" />
+            </div>
+          </div>
+
+          <div class="field">
+            <span>予定名</span>
+            <input id="meetingTitle" type="text" placeholder="例：SioryUI改修 MTG" />
+          </div>
+
+          <div class="field">
+            <span>読み上げ文</span>
+            <textarea id="meetingText" placeholder="未入力なら自動で文言を作ります"></textarea>
+          </div>
+
+          <button class="primary" id="addMeetingBtn">打ち合わせを追加</button>
+        </div>
+      </details>
+
+      <details>
+        <summary>固定ミーティング</summary>
+
+        <div class="form">
+          <div class="field">
+            <span>タイトル</span>
+            <input id="recurringTitle" type="text" placeholder="例：朝MTG" />
+          </div>
+
+          <div class="field">
+            <span>曜日</span>
+            <div class="weekday-grid" id="recurringWeekdays">
+              <label class="weekday-option"><input type="checkbox" value="1" />月</label>
+              <label class="weekday-option"><input type="checkbox" value="2" />火</label>
+              <label class="weekday-option"><input type="checkbox" value="3" />水</label>
+              <label class="weekday-option"><input type="checkbox" value="4" />木</label>
+              <label class="weekday-option"><input type="checkbox" value="5" />金</label>
+              <label class="weekday-option"><input type="checkbox" value="6" />土</label>
+              <label class="weekday-option"><input type="checkbox" value="0" />日</label>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <span>開始時刻</span>
+              <input id="recurringTime" type="time" />
+            </div>
+            <div class="field">
+              <span>何分前</span>
+              <input id="recurringBefore" type="number" value="2" min="0" max="120" />
+            </div>
+          </div>
+
+          <button class="primary" id="addRecurringBtn">固定ミーティングを追加</button>
+        </div>
+
+        <div class="meeting-list" id="recurringList"></div>
+      </details>
+
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "work_chime_clock_v2";
+
+    const defaultState = {
+      running: false,
+      hourlyEnabled: true,
+      defaultBefore: 2,
+      hourlyText: "{hour}時です。ここまでの作業を軽く記録しましょう。",
+      calendarUrl: "calendar.html",
+      voiceName: "",
+      voiceRate: 1,
+      voicePitch: 1.15,
+      morningMtgUrl: "",
+      nightMtgUrl: "",
+      meetings: [
+        {
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          date: new Date().toISOString().slice(0, 10),
+          time: "13:00",
+          title: "サンプル打ち合わせ",
+          text: "",
+          before: 2
+        }
+      ],
+      recurringMeetings: [],
+      skippedRecurring: {},
+      spokenKeys: {}
+    };
+
+    let state = loadState();
+    state.hourlyEnabled = true;
+
+    const el = {
+      clock: document.getElementById("clock"),
+      dateText: document.getElementById("dateText"),
+      status: document.getElementById("statusToggle"),
+      statusText: document.getElementById("statusText"),
+      nextTitle: document.getElementById("nextTitle"),
+      nextMeta: document.getElementById("nextMeta"),
+      nextDeleteBtn: document.getElementById("nextDeleteBtn"),
+      statusToggle: document.getElementById("statusToggle"),
+      todaySchedule: document.getElementById("todaySchedule"),
+      morningMtgLink: document.getElementById("morningMtgLink"),
+      nightMtgLink: document.getElementById("nightMtgLink"),
+      openCalendarBtn: document.getElementById("openCalendarBtn"),
+      hourlyText: document.getElementById("hourlyText"),
+      calendarUrl: document.getElementById("calendarUrl"),
+      morningMtgUrl: document.getElementById("morningMtgUrl"),
+      nightMtgUrl: document.getElementById("nightMtgUrl"),
+      voiceSelect: document.getElementById("voiceSelect"),
+      voiceRate: document.getElementById("voiceRate"),
+      voicePitch: document.getElementById("voicePitch"),
+      testVoiceBtn: document.getElementById("testVoiceBtn"),
+      meetingTime: document.getElementById("meetingTime"),
+      meetingBefore: document.getElementById("meetingBefore"),
+      meetingTitle: document.getElementById("meetingTitle"),
+      meetingText: document.getElementById("meetingText"),
+      addMeetingBtn: document.getElementById("addMeetingBtn"),
+      recurringTitle: document.getElementById("recurringTitle"),
+      recurringWeekdays: document.getElementById("recurringWeekdays"),
+      recurringTime: document.getElementById("recurringTime"),
+      recurringBefore: document.getElementById("recurringBefore"),
+      addRecurringBtn: document.getElementById("addRecurringBtn"),
+      recurringList: document.getElementById("recurringList")
+    };
+
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return deepClone(defaultState);
+      try {
+        return { ...deepClone(defaultState), ...JSON.parse(saved) };
+      } catch {
+        return deepClone(defaultState);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function pad(n) {
+      return String(n).padStart(2, "0");
+    }
+
+    function toDateTime(date, time) {
+      const [y, m, d] = date.split("-").map(Number);
+      const [hh, mm] = time.split(":").map(Number);
+      return new Date(y, m - 1, d, hh, mm, 0, 0);
+    }
+
+    function formatDate(now) {
+      const days = ["日", "月", "火", "水", "木", "金", "土"];
+      return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日（${days[now.getDay()]}）`;
+    }
+
+    let availableVoices = [];
+
+    function loadVoices() {
+      availableVoices = window.speechSynthesis.getVoices();
+
+      const currentValue = state.voiceName || "";
+      const japaneseVoices = availableVoices.filter(voice => voice.lang && voice.lang.toLowerCase().startsWith("ja"));
+
+      el.voiceSelect.innerHTML = '<option value="">自動</option>';
+
+      japaneseVoices.forEach(voice => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = `${voice.name}（${voice.lang}）`;
+        el.voiceSelect.appendChild(option);
+      });
+
+      el.voiceSelect.value = currentValue;
+    }
+
+    function getSelectedVoice() {
+      if (!availableVoices.length) {
+        availableVoices = window.speechSynthesis.getVoices();
+      }
+
+      if (state.voiceName) {
+        const selected = availableVoices.find(voice => voice.name === state.voiceName);
+        if (selected) return selected;
+      }
+
+      return availableVoices.find(voice => voice.lang === "ja-JP")
+        || availableVoices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith("ja"))
+        || null;
+    }
+
+    function speak(text) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "ja-JP";
+
+      const selectedVoice = getSelectedVoice();
+      if (selectedVoice) {
+        u.voice = selectedVoice;
+        u.lang = selectedVoice.lang;
+      }
+
+      u.rate = Number(state.voiceRate || 1);
+      u.pitch = Number(state.voicePitch || 1.15);
+
+      window.speechSynthesis.speak(u);
+    }
+
+    function makeMeetingText(meeting) {
+      const [h, m] = meeting.time.split(":");
+      const hourText = Number(m) === 0 ? `${Number(h)}時` : `${Number(h)}時${Number(m)}分`;
+      return meeting.text || `まもなく${hourText}から、${meeting.title}です。資料を開いてください。`;
+    }
+
+    function makeRecurringText(meeting) {
+      const [h, m] = meeting.time.split(":");
+      const hourText = Number(m) === 0 ? `${Number(h)}時` : `${Number(h)}時${Number(m)}分`;
+      return `まもなく${hourText}から、${meeting.title}です。`;
+    }
+
+    function weekdayLabel(days) {
+      const names = ["日", "月", "火", "水", "木", "金", "土"];
+      return [...days].sort((a, b) => a - b).map(day => names[day]).join("・");
+    }
+
+    function dateKey(dateObj) {
+      return `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`;
+    }
+
+    function getEvents(now) {
+      const events = [];
+
+      if (state.hourlyEnabled) {
+        const nextHour = new Date(now);
+        nextHour.setMinutes(0, 0, 0);
+        if (nextHour <= now) nextHour.setHours(nextHour.getHours() + 1);
+
+        events.push({
+          type: "hourly",
+          at: nextHour,
+          title: `${nextHour.getHours()}時の時報`,
+          text: state.hourlyText.replaceAll("{hour}", nextHour.getHours()),
+          key: `hourly-${nextHour.toISOString().slice(0, 13)}`
+        });
+      }
+
+      state.meetings.forEach(meeting => {
+        const meetingAt = toDateTime(meeting.date, meeting.time);
+        const before = Number(meeting.before || state.defaultBefore || 2);
+        const alarmAt = new Date(meetingAt.getTime() - before * 60 * 1000);
+
+        if (meetingAt >= now || alarmAt >= new Date(now.getTime() - 60 * 1000)) {
+          events.push({
+            type: "meeting",
+            at: alarmAt,
+            meetingAt,
+            title: meeting.title,
+            text: makeMeetingText(meeting),
+            key: `meeting-${meeting.id}-${meeting.date}-${meeting.time}`,
+            kind: "meeting",
+            id: meeting.id
+          });
+        }
+      });
+
+      (state.recurringMeetings || []).forEach(meeting => {
+        const days = meeting.days || [];
+        if (!days.length || !meeting.time) return;
+
+        for (let offset = 0; offset < 8; offset += 1) {
+          const target = new Date(now);
+          target.setDate(now.getDate() + offset);
+          if (!days.includes(target.getDay())) continue;
+
+          const [hh, mm] = meeting.time.split(":").map(Number);
+          const meetingAt = new Date(target.getFullYear(), target.getMonth(), target.getDate(), hh, mm, 0, 0);
+          const before = Number(meeting.before ?? state.defaultBefore ?? 2);
+          const alarmAt = new Date(meetingAt.getTime() - before * 60 * 1000);
+          const recurringDateKey = dateKey(meetingAt);
+          const recurringKey = `recurring-${meeting.id}-${recurringDateKey}-${meeting.time}`;
+
+          if (state.skippedRecurring && state.skippedRecurring[recurringKey]) continue;
+
+          if (meetingAt >= now || alarmAt >= new Date(now.getTime() - 60 * 1000)) {
+            events.push({
+              type: "meeting",
+              at: alarmAt,
+              meetingAt,
+              title: meeting.title,
+              text: makeRecurringText(meeting),
+              key: recurringKey,
+              kind: "recurring",
+              id: meeting.id
+            });
+            break;
+          }
+        }
+      });
+
+      return events.sort((a, b) => a.at - b.at);
+    }
+
+    function getTodayMeetings(now) {
+      const today = dateKey(now);
+      const meetings = [];
+
+      state.meetings.forEach(meeting => {
+        if (meeting.date !== today) return;
+
+        const meetingAt = toDateTime(meeting.date, meeting.time);
+        if (meetingAt < now) return;
+
+        const before = Number(meeting.before || state.defaultBefore || 2);
+        meetings.push({
+          at: meetingAt,
+          title: meeting.title,
+          key: `meeting-${meeting.id}-${meeting.date}-${meeting.time}`,
+          kind: "meeting",
+          id: meeting.id,
+          before
+        });
+      });
+
+      (state.recurringMeetings || []).forEach(meeting => {
+        const days = meeting.days || [];
+        if (!days.includes(now.getDay()) || !meeting.time) return;
+
+        const [hh, mm] = meeting.time.split(":").map(Number);
+        const meetingAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0, 0);
+        if (meetingAt < now) return;
+
+        const before = Number(meeting.before ?? state.defaultBefore ?? 2);
+        const key = `recurring-${meeting.id}-${today}-${meeting.time}`;
+        if (state.skippedRecurring && state.skippedRecurring[key]) return;
+
+        meetings.push({
+          at: meetingAt,
+          title: meeting.title,
+          key,
+          kind: "recurring",
+          id: meeting.id,
+          before
+        });
+      });
+
+      return meetings.sort((a, b) => a.at - b.at);
+    }
+
+    function deleteScheduleItem(kind, id, key) {
+      if (kind === "recurring") {
+        state.skippedRecurring = state.skippedRecurring || {};
+        state.skippedRecurring[key] = true;
+      } else {
+        state.meetings = state.meetings.filter(meeting => meeting.id !== id);
+      }
+
+      saveState();
+      render();
+    }
+
+    function renderTodaySchedule(now, next) {
+      const nextKey = next && next.type === "meeting" ? next.key : "";
+      const meetings = getTodayMeetings(now).filter(meeting => meeting.key !== nextKey);
+
+      el.todaySchedule.innerHTML = "";
+      el.todaySchedule.hidden = meetings.length === 0;
+
+      meetings.forEach(meeting => {
+        const item = document.createElement("div");
+        item.className = "schedule-item";
+        item.innerHTML = `
+          <span class="schedule-time">${pad(meeting.at.getHours())}：${pad(meeting.at.getMinutes())}</span>
+          <span class="schedule-title">${escapeHtml(meeting.title)}</span>
+          <button class="schedule-delete" type="button" data-kind="${meeting.kind}" data-id="${meeting.id}" data-key="${meeting.key}" aria-label="${escapeHtml(meeting.title)}を削除">
+            <span aria-hidden="true">×</span>
+          </button>
+        `;
+        el.todaySchedule.appendChild(item);
+      });
+
+      el.todaySchedule.querySelectorAll(".schedule-delete").forEach(btn => {
+        btn.addEventListener("click", () => {
+          deleteScheduleItem(btn.dataset.kind, btn.dataset.id, btn.dataset.key);
+        });
+      });
+    }
+
+    function hasMeetingStartingAt(dateObj) {
+      const date = dateKey(dateObj);
+      const time = `${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
+      const hasOneTimeMeeting = state.meetings.some(m => m.date === date && m.time === time);
+      const hasRecurringMeeting = (state.recurringMeetings || []).some(m => {
+        const days = m.days || [];
+        const key = `recurring-${m.id}-${date}-${m.time}`;
+        return days.includes(dateObj.getDay()) && m.time === time && !(state.skippedRecurring && state.skippedRecurring[key]);
+      });
+      return hasOneTimeMeeting || hasRecurringMeeting;
+    }
+
+    function tick() {
+      const now = new Date();
+      el.clock.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      el.dateText.textContent = formatDate(now);
+
+      const events = getEvents(now);
+      const next = events.find(e => e.type === "meeting"
+        ? e.meetingAt >= now
+        : e.at >= new Date(now.getTime() - 1000));
+
+      if (next) {
+        const diffBase = next.type === "meeting" ? next.meetingAt : next.at;
+        const diffMs = diffBase - now;
+        const diffMin = Math.max(0, Math.ceil(diffMs / 60000));
+        const timeText = `${pad(next.at.getHours())}:${pad(next.at.getMinutes())}`;
+
+        el.nextTitle.textContent = next.title;
+        el.nextMeta.textContent = next.type === "meeting"
+          ? `${timeText}に読み上げ／開始 ${pad(next.meetingAt.getHours())}:${pad(next.meetingAt.getMinutes())}／開始まで約${diffMin}分`
+          : `${timeText}に読み上げ／あと約${diffMin}分`;
+
+        el.nextDeleteBtn.hidden = next.type !== "meeting";
+        if (next.type === "meeting") {
+          el.nextDeleteBtn.dataset.kind = next.kind;
+          el.nextDeleteBtn.dataset.id = next.id;
+          el.nextDeleteBtn.dataset.key = next.key;
+          el.nextDeleteBtn.setAttribute("aria-label", `${next.title}を削除`);
+        }
+      } else {
+        el.nextTitle.textContent = "予定はありません";
+        el.nextMeta.textContent = "打ち合わせ予定を追加できます。";
+        el.nextDeleteBtn.hidden = true;
+      }
+
+      renderTodaySchedule(now, next);
+
+      if (!state.running) return;
+
+      const dueEvents = getEvents(now).filter(e => Math.abs(e.at - now) < 30 * 1000);
+
+      dueEvents.forEach(event => {
+        if (event.type === "hourly" && hasMeetingStartingAt(event.at)) return;
+
+        const dayKey = dateKey(now);
+        const key = `${dayKey}-${event.key}`;
+
+        if (!state.spokenKeys[key]) {
+          speak(event.text);
+          state.spokenKeys[key] = true;
+          saveState();
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function updateMeetingLink(link, url) {
+      const href = String(url || "").trim();
+      link.href = href || "#";
+      link.toggleAttribute("aria-disabled", !href);
+    }
+
+    function render() {
+      el.status.classList.toggle("on", state.running);
+      el.statusToggle.setAttribute("aria-pressed", String(state.running));
+      el.statusText.textContent = state.running ? "ON" : "停止中";
+
+      el.hourlyText.value = state.hourlyText;
+      el.calendarUrl.value = state.calendarUrl || "calendar.html";
+      el.morningMtgUrl.value = state.morningMtgUrl || "";
+      el.nightMtgUrl.value = state.nightMtgUrl || "";
+      updateMeetingLink(el.morningMtgLink, state.morningMtgUrl);
+      updateMeetingLink(el.nightMtgLink, state.nightMtgUrl);
+      el.voiceRate.value = String(state.voiceRate || 1);
+      el.voicePitch.value = String(state.voicePitch || 1.15);
+      if (el.voiceSelect.options.length > 1) {
+        el.voiceSelect.value = state.voiceName || "";
+      }
+
+      el.recurringBefore.value = el.recurringBefore.value || state.defaultBefore || 2;
+      el.recurringList.innerHTML = "";
+
+      const sortedRecurring = [...(state.recurringMeetings || [])].sort((a, b) => a.time.localeCompare(b.time));
+
+      sortedRecurring.forEach(meeting => {
+        const div = document.createElement("div");
+        div.className = "meeting";
+        div.innerHTML = `
+          <div>
+            <strong>${escapeHtml(meeting.title)}</strong>
+            <small>${weekdayLabel(meeting.days || [])} ${meeting.time}／${meeting.before ?? state.defaultBefore ?? 2}分前に読み上げ</small>
+          </div>
+          <button class="danger small-btn" data-id="${meeting.id}">削除</button>
+        `;
+        el.recurringList.appendChild(div);
+      });
+
+      el.recurringList.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.recurringMeetings = (state.recurringMeetings || []).filter(m => m.id !== btn.dataset.id);
+          saveState();
+          render();
+        });
+      });
+
+      tick();
+    }
+
+    function bind() {
+      el.statusToggle.addEventListener("click", () => {
+        state.running = !state.running;
+        if (!state.running) {
+          window.speechSynthesis.cancel();
+        }
+        saveState();
+        render();
+        if (state.running) {
+          speak("読み上げを開始");
+        }
+      });
+
+      el.openCalendarBtn.addEventListener("click", () => {
+        state.calendarUrl = el.calendarUrl.value || "calendar.html";
+        saveState();
+
+        const w = 1200;
+        const h = 820;
+        const left = Math.max(0, Math.round((window.screen.width - w) / 2));
+        const top = Math.max(0, Math.round((window.screen.height - h) / 2));
+
+        const features = [
+          `width=${w}`,
+          `height=${h}`,
+          `left=${left}`,
+          `top=${top}`,
+          "resizable=yes",
+          "scrollbars=yes",
+          "noopener=no"
+        ].join(",");
+
+        window.open(state.calendarUrl, "calendarWindow", features);
+      });
+
+      el.nextDeleteBtn.addEventListener("click", () => {
+        deleteScheduleItem(el.nextDeleteBtn.dataset.kind, el.nextDeleteBtn.dataset.id, el.nextDeleteBtn.dataset.key);
+      });
+
+      [el.morningMtgLink, el.nightMtgLink].forEach(link => {
+        link.addEventListener("click", event => {
+          if (link.getAttribute("aria-disabled") === "true") {
+            event.preventDefault();
+            alert("設定からMTG URLを入力してください。");
+          }
+        });
+      });
+
+      [el.hourlyText, el.calendarUrl, el.morningMtgUrl, el.nightMtgUrl, el.voiceSelect, el.voiceRate, el.voicePitch].forEach(input => {
+        input.addEventListener("change", () => {
+          state.hourlyText = el.hourlyText.value || defaultState.hourlyText;
+          state.calendarUrl = el.calendarUrl.value || "calendar.html";
+          state.morningMtgUrl = el.morningMtgUrl.value.trim();
+          state.nightMtgUrl = el.nightMtgUrl.value.trim();
+          state.voiceName = el.voiceSelect.value || "";
+          state.voiceRate = Number(el.voiceRate.value || 1);
+          state.voicePitch = Number(el.voicePitch.value || 1.15);
+          saveState();
+          render();
+        });
+      });
+
+      el.testVoiceBtn.addEventListener("click", () => {
+        state.voiceName = el.voiceSelect.value || "";
+        state.voiceRate = Number(el.voiceRate.value || 1);
+        state.voicePitch = Number(el.voicePitch.value || 1.15);
+        saveState();
+        const sampleHour = new Date().getHours();
+        const testText = (el.hourlyText.value || defaultState.hourlyText).replaceAll("{hour}", sampleHour);
+        speak(testText);
+      });
+
+      el.addMeetingBtn.addEventListener("click", () => {
+        const date = dateKey(new Date());
+        const time = el.meetingTime.value;
+        const before = Number(el.meetingBefore.value || state.defaultBefore || 2);
+        const title = el.meetingTitle.value.trim();
+
+        if (!time || !title) {
+          alert("開始時刻・予定名を入れてください。");
+          return;
+        }
+
+        state.meetings.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          date,
+          time,
+          title,
+          text: el.meetingText.value.trim(),
+          before
+        });
+
+        el.meetingTime.value = "";
+        el.meetingBefore.value = state.defaultBefore || 2;
+        el.meetingTitle.value = "";
+        el.meetingText.value = "";
+
+        saveState();
+        render();
+      });
+
+      el.addRecurringBtn.addEventListener("click", () => {
+        const title = el.recurringTitle.value.trim();
+        const time = el.recurringTime.value;
+        const days = [...el.recurringWeekdays.querySelectorAll("input:checked")].map(input => Number(input.value));
+        const before = Number(el.recurringBefore.value || state.defaultBefore || 2);
+
+        if (!title || !time || !days.length) {
+          alert("タイトル・曜日・開始時刻を入れてください。");
+          return;
+        }
+
+        state.recurringMeetings = state.recurringMeetings || [];
+        state.recurringMeetings.push({
+          id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          title,
+          days,
+          time,
+          before
+        });
+
+        el.recurringTitle.value = "";
+        el.recurringTime.value = "";
+        el.recurringBefore.value = state.defaultBefore || 2;
+        el.recurringWeekdays.querySelectorAll("input").forEach(input => {
+          input.checked = false;
+        });
+
+        saveState();
+        render();
+      });
+    }
+
+    function setCatFavicon() {
+      const catImg = document.querySelector(".cat-wrap img");
+      if (!catImg) return;
+
+      const icon = document.createElement("link");
+      icon.rel = "icon";
+      icon.type = "image/png";
+      icon.href = catImg.src;
+
+      document.head.querySelectorAll('link[rel="icon"]').forEach(link => link.remove());
+      document.head.appendChild(icon);
+    }
+
+    setCatFavicon();
+    loadVoices();
+    if ("onvoiceschanged" in window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        loadVoices();
+        render();
+      };
+    }
+
+    bind();
+    render();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
